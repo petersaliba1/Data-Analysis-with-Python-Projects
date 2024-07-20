@@ -1,0 +1,89 @@
+# Why use this?
+
+## This markdown file uses a demographics dataset that can be used to answer questions about a population. This is part of the projects required for FreeCodeCamp's Data Analysis with Python course.
+
+```{r}
+#install.packages("dplyr")
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages('plyr')
+library(plyr)
+```
+
+```{r}
+#getwd()
+df <- read_csv("adult.csv")
+View(df)
+```
+
+```{r}
+#1.) How many people of each race are represented in this dataset? This should be a Pandas series with race names as the index labels. (race column)
+
+print(unique(count(df$race)))
+```
+
+```{r}
+#2.) What is the average age of men?
+
+men <- filter(df, sex == "Male")
+print(mean(men$age))
+```
+
+```{r}
+#3.) What is the percentage of people who have a Bachelor's degree?
+
+bachelors <- filter(df, education == "Bachelors")
+print(nrow(bachelors)/nrow(df)*100)
+```
+
+```{r}
+#4.) What percentage of people with advanced education (Bachelors, Masters, or Doctorate) make more than 50K?
+
+masters <- filter(df, education == "Masters")
+doctorate <- filter(df, education == "Doctorate")
+advanced <- full_join(bachelors, full_join(masters, doctorate))
+advanced_and_50k <- filter(advanced, income == ">50K")
+```
+
+```{r}
+#5.) What percentage of people without advanced education make more than 50K?
+
+not_advanced <- df[!(df$education %in% c("Bachelors", "Masters", "Doctorate")), ]
+not_advanced_under50k <- filter(not_advanced, income == "<=50K")
+print(nrow(not_advanced_under50k)/nrow(not_advanced)*100)
+```
+
+```{r}
+#6.) What is the minimum number of hours a person works per week?
+
+print(min(df$`hours-per-week`))
+```
+
+```{r}
+#7.) What percentage of the people who work the minimum number of hours per week have a salary of more than 50K?
+
+minimum_hours <- filter(df, `hours-per-week` == 1)
+View(minimum_hours)
+minimum_hours_under_50k <- filter(minimum_hours, income == "<=50K")
+print(nrow(minimum_hours_under_50k)/nrow(minimum_hours))
+```
+
+```{r}
+#8.) What country has the highest percentage of people that earn >50K and what is that percentage?
+
+high_income <- filter(df, income == ">50K")
+percentages <- prop.table(table(high_income$`native-country`))*100
+sorted_percentages <- sort(percentages, decreasing = TRUE)
+top_country <- names(sorted_percentages)[1]
+print(top_country)
+```
+
+```{r}
+#9.) Identify the most popular occupation for those who earn >50K in India.
+
+india <- filter(df, `native-country` == "India")
+occupation_freq <- prop.table(table(india$occupation))
+sorted_frequencies <- sort(occupation_freq, decreasing = TRUE)
+top_occupation <- names(sorted_frequencies)[1]
+print(top_occupation)
+```
