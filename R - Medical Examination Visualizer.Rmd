@@ -1,0 +1,63 @@
+# Why use this?
+
+## This markdown file uses a demographics dataset that can be used to answer questions about a population. This is part of the projects required for FreeCodeCamp's Data Analysis with Python course.
+
+```{r}
+#install.packages("dplyr")
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages('plyr')
+library(plyr)
+```
+
+```{r}
+#getwd()
+df <- read_csv("medical_examination.csv")
+View(df)
+```
+
+```{r}
+#1.) Add an overweight column to the data. To determine if a person is overweight, first calculate their BMI by dividing their weight in kilograms by the square of their height in meters. If that value is > 25 then the person is overweight. Use the value 0 for NOT overweight and the value 1 for overweight.
+df$BMI <- df$`weight` / ((df$height/100) ^ 2)
+df$overweight <- ifelse(df$BMI > 25, 1, 0)
+```
+
+```{r}
+#2.) Normalize the data by making 0 always good and 1 always bad. If the value of cholesterol or gluc is 1, make the value 0. If the value is more than 1, make the value 1.
+
+df$overweight <- ifelse(df$overweight == 1, "always good", "always bad")
+df$cholesterol <- ifelse(df$cholesterol == 1, 0, 1)
+df$gluc <- ifelse(df$gluc == 1, 0, 1)
+View(df)
+```
+
+```{r}
+#3.) Convert the data into long format and create a chart that shows the value counts of the categorical features using seaborn's catplot(). The dataset should be split by Cardio so there is one chart for each cardio value. The chart should look like examples/Figure_1.png.
+
+#install.packages("ggplot")
+library(ggplot2)
+ggplot(df, aes(cardio)) + geom_bar(color = "black", fill = "black") + geom_text(stat = 'count', aes(label = ..count..), vjust = -0.5)
+```
+
+```{r}
+#4.) Clean the data. Filter out the following patient segments that represent incorrect data:
+# diastolic pressure is higher than systolic (Keep the correct data with (df['ap_lo'] <= df['ap_hi']))
+# height is less than the 2.5th percentile (Keep the correct data with (df['height'] >= df['height'].quantile(0.025)))
+# height is more than the 97.5th percentile
+# weight is less than the 2.5th percentile
+# weight is more than the 97.5th percentile
+
+incorrect <- filter(df, !(df$ap_hi < df$ap_lo))
+incorrect_sorted_weight <- sort(incorrect$weight, decreasing = TRUE)
+incorrect_sorted_height <- sort(incorrect$height, decreasing = TRUE)
+incorrect_sorted <- filter(incorrect, incorrect$weight < incorrect_sorted_weight[nrow(df)*0.025], incorrect$weight > incorrect_sorted_weight[nrow(df)*0.975], incorrect$height < incorrect_sorted_height[nrow(df)*0.025], incorrect$height > incorrect_sorted_height[nrow(df)*0.975])
+View(incorrect_sorted)
+```
+
+```{r}
+#5.) Create a correlation matrix using the dataset. Plot the correlation matrix using seaborn's heatmap(). Mask the upper triangle. The chart should look like examples/Figure_2.png.
+#install.packages("corrplot")
+library(corrplot)
+correlation_data <- select(incorrect_sorted, !(overweight))
+corrplot(cor(correlation_data), method = "color")
+```
